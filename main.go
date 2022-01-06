@@ -50,16 +50,19 @@ func callProcess(caller *sap_api_caller.SAPAPICaller, msg rabbitmq.RabbitmqMessa
 			return
 		}
 	}()
-	material, plant := extractData(msg.Data())
+	material, plant, productDescription, billOfMaterialComponent, componentDescription := extractData(msg.Data())
 	accepter := getAccepter(msg.Data())
-	caller.AsyncGetBillOfMaterial(material, plant, accepter)
+	caller.AsyncGetBillOfMaterial(material, plant, productDescription, billOfMaterialComponent, componentDescription, accepter)
 	return nil
 }
 
-func extractData(data map[string]interface{}) (material, plant string) {
+func extractData(data map[string]interface{}) (material, plant, productDescription, billOfMaterialComponent, componentDescription string) {
 	sdc := sap_api_input_reader.ConvertToSDC(data)
 	material = sdc.BillOfMaterial.Material
 	plant = sdc.BillOfMaterial.Plant
+	productDescription = sdc.BillOfMaterial.ProductDescription
+	billOfMaterialComponent = sdc.BillOfMaterial.BillOfMaterialItem.BillOfMaterialComponent
+	componentDescription = sdc.BillOfMaterial.BillOfMaterialItem.ComponentDescription
 	return
 }
 
@@ -72,7 +75,7 @@ func getAccepter(data map[string]interface{}) []string {
 
 	if accepter[0] == "All" {
 		accepter = []string{
-			"Header", "Item",
+			"Header", "Item", "ProductDescription", "Component", "ComponentDescription",
 		}
 	}
 	return accepter
